@@ -17,4 +17,5 @@ require_once( 'autoload.php' );
 
 // inc\classes\New_Site_BP_Nav::init();
 inc\classes\Clone_Site::init();
-inc\classes\PTB_AJAX::init();
+inc\classes\Dev_Dashboard::init();
+// inc\classes\PTB_AJAX::init();

@@ -7,13 +7,13 @@ class New_Site_BP_Nav {
 
 
 	public static function init() {
-		add_action( 'bp_setup_nav', array( __CLASS__, 'newsite_bp_nav_item1' ), 99 );
+		// add_action( 'bp_setup_nav', array( __CLASS__, 'newsite_bp_nav_item1' ), 99 );
 
-		add_shortcode( 'new-site-bp-nav', array( __CLASS__, 'class_info' ) );
-		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'build_site_ajax_enqueue' ) );		// THE AJAX ADD ACTIONS
-		add_action( 'wp_ajax_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
-		// need this to serve non logged in users
-		add_action( 'wp_ajax_nopriv_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
+		// add_shortcode( 'new-site-bp-nav', array( __CLASS__, 'class_info' ) );
+		// add_action( 'wp_enqueue_scripts', array( __CLASS__, 'build_site_ajax_enqueue' ) );		// THE AJAX ADD ACTIONS
+		// add_action( 'wp_ajax_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
+		// // need this to serve non logged in users
+		// add_action( 'wp_ajax_nopriv_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
 		// add_action( 'the_content', array( __CLASS__, 'my_action_javascript' ) );
 	}
 

@@ -13,18 +13,107 @@ class Clone_Site {
 	https://buddydev.com/wordpress-multisite/cloning-blogs-on-wordpress-multisite-programmatically
 	*/
 	public static function init() {
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'print_site_ajax_enqueue' ) );		// THE AJAX ADD ACTIONS
+		add_shortcode( 'print-ajax-frontend', array( __CLASS__, 'print_ajax_frontend' ) );
+		add_shortcode( 'frontend-clone-site', array( __CLASS__, 'brint_ajax_frontend' ) );
+		add_action( 'wp_ajax_brint_ajax_hook',  array( __CLASS__, 'set_new_blog_build' ) );
+		add_action( 'wp_ajax_print_ajax_hook',  array( __CLASS__, 'print_ajax_function' ) );
 		// add_action( 'admin_menu', array( __CLASS__, 'sample_menu' ) );
 		add_shortcode( 'bp-template-content', array( __CLASS__, 'build_site_ajax_frontend' ) );
-		// add_action( 'admin_init', array( __CLASS__, 'init_multisite_cloner' ) );
-		add_action( 'bp_setup_nav', array( __CLASS__, 'build_site_bp_nav_item' ), 99 );
-
+		add_shortcode( 'get-sites', array( __CLASS__, 'get_sites' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'install_multisite_cloner' ) );
 		add_action( 'admin_init', array( __CLASS__, 'init_multisite_cloner' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'plugin_setup' ) );
-		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'build_site_ajax_enqueue' ) );		// THE AJAX ADD ACTIONS
-		add_action( 'wp_ajax_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
-		// need this to serve non logged in users
-		add_action( 'wp_ajax_nopriv_the_ajax_hook',  array( __CLASS__, 'build_site_function' ) );
+		// add_action( 'wp_enqueue_scripts', array( __CLASS__, 'build_site_ajax_enqueue' ) );		// THE AJAX ADD ACTIONS
+
+
+	}
+
+
+	public static function print_site_ajax_enqueue() {
+		// enqueue and localise scripts
+		wp_enqueue_script( 'my-ajax-handle', plugin_dir_url( __FILE__ ) . '../js/ajax-submit-form.js', array( 'jquery' ) );
+		wp_localize_script( 'my-ajax-handle', 'print_ajax_hook', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+		wp_enqueue_script( 'ajax-handle', plugin_dir_url( __FILE__ ) . '../js/ajax-submit.js', array( 'jquery' ) );
+		wp_localize_script( 'ajax-handle', 'brint_ajax_hook', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+	}
+
+	public static function print_ajax_frontend() {
+		// $site_user = wp_get_current_user();
+		$the_form = '
+		<form id="buildsite">
+		<input id="domain" name="domain" placeholder="domain" type="text" />
+		<input id="title" name="title" placeholder="title" type="text" />
+		<input name="action" type="hidden" value="print_ajax_hook" />&nbsp; <!-- this puts the action print_ajax_hook into the serialized form -->
+		<input id="submit_button" value="submit_me" type="button" onClick="submit_me();"  />
+		</form>
+		This the response from <h4>submit_me ' . __FUNCTION__ . '</h4>
+		<div id="response_area">
+
+		</div>';
+		return $the_form . ' from <h4>' . __FUNCTION__ . '</h4>';
+	}
+
+	public static function brint_ajax_frontend() {
+		// $site_user = wp_get_current_user();
+		$the_form2 = '
+		<form id="buildsite">
+		<input id="domain" name="domain" placeholder="input a subdomain name (no spaces or special characters)" type="text" />
+		<input id="title" name="title" placeholder="title" type="text" />
+		<input name="action" type="hidden" value="brint_ajax_hook" />&nbsp; <!-- this puts the action print_ajax_hook into the serialized form -->
+		<input id="submit_button" value="submit_me3" type="button" onClick="submit_me3();"  />
+		</form>
+		This the response from <h4>submit_me ' . __FUNCTION__ . '</h4>
+		<div id="response_area">
+
+		</div>';
+		return $the_form2 . ' from <h4>' . __FUNCTION__ . '</h4>';
+	}
+
+	public static function brint_ajax_function() {
+		$print = array();
+		// $array['name'] = $_POST['name'];
+		$print['domain'] = $_POST['domain'];
+		$print['function'] = __FUNCTION__;
+
+		// $print['path'] = '/';
+		$print['title'] = $_POST['title'];
+		$current_user = wp_get_current_user();
+		$print['user_email'] = $current_user->user_email;
+		$print['user_id'] = get_current_user_id();
+		// $print['site_id'] = 6;
+
+		echo '<pre>';
+		print_r( $print );
+		echo '</pre>';
+
+		echo '<br>at ' . $print['domain'];
+		echo '<br>entitled ' . $print['title'];
+		echo '<br> ' . $print['user_email'];
+		echo '<h4> ' . $print['function'] . '</h4> returns ';
+		die();
+	}
+
+	public static function print_ajax_function() {
+		$print = array();
+		// $array['name'] = $_POST['name'];
+		$print['domain'] = $_POST['domain'];
+		// $print['path'] = '/';
+		$print['title'] = $_POST['title'];
+		$current_user = wp_get_current_user();
+		$print['user_email'] = $current_user->user_email;
+		$print['user_id'] = get_current_user_id();
+		// $print['site_id'] = 6;
+
+		echo '<pre>';
+		print_r( $print );
+		echo '</pre>';
+
+		echo '<br>at ' . $print['domain'];
+		echo '<br>entitled ' . $print['title'];
+		echo '<br> ' . $print['user_email'];
+		echo $current_user->user_email;
+		die();
 	}
 
 
@@ -223,56 +312,6 @@ HTML;
 		return $actions;
 	}
 
-	/**
-	 * adds the profile user nav link
-	 */
-	public static function build_site_bp_nav_item() {
-		global $bp;
-
-		$args = array(
-			'name' => __( 'Build Site', 'buddypress' ),
-			'slug' => 'buildsite',
-			'default_subnav_slug' => 'buildsite',
-			'position' => 11,
-			'screen_function' => array( __CLASS__, 'build_site_tab_screen' ),
-			'item_css_id' => 'buildsite',
-		);
-
-		bp_core_new_nav_item( $args );
-	}
-	/**
-	 * the calback function from our nav item arguments
-	 */
-	public static function build_site_tab_screen() {
-		add_action( 'bp_template_title', array( __CLASS__, 'build_site_tab_title' ) );
-		add_action( 'bp_template_content', array( __CLASS__, 'build_site_ajax_frontend' ) );
-		bp_core_load_template( apply_filters( 'bp_core_template_plugin', array( __CLASS__, 'members/single/plugins' ) ) );
-	}
-
-	public static function build_site_ajax_enqueue() {
-		// enqueue and localise scripts
-		wp_enqueue_script( 'my-ajax-handle', plugin_dir_url( __FILE__ ) . '../js/ajax-submit.js', array( 'jquery' ) );
-		wp_localize_script( 'my-ajax-handle', 'the_ajax_script', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
-	}
-
-	public static function build_site_tab_title() {
-		echo 'Build New Site';
-	}
-
-	public static function print_ajax_frontend() {
-		// $site_user = wp_get_current_user();
-		$the_form = '
-		<form id="build-site-form">
-		<input id="domain" name="domain" placeholder="domain" type="text" />
-		<input id="title" name="title" placeholder="title" type="text" />
-		<input name="action" type="hidden" value="the_ajax_hook" />&nbsp; <!-- this puts the action the_ajax_hook into the serialized form -->
-		<input id="submit_button" value="Click This" type="button" onClick="submit_me();" />
-		</form>
-		<div id="response_area">
-		This is where we\'ll get the response
-		</div>';
-		return $the_form;
-	}
 
 	public static function build_site_ajax_frontend() {
 		echo 'Main Blog = ' . self::name_ly_get_main_blog_id();
@@ -289,63 +328,82 @@ HTML;
 		return $this_site;
 	}
 
-	public static function build_site_function() {
-		/* this area is very simple but being serverside it affords the possibility of retreiving data from the server and passing it back to the javascript function */
-		$array = array();
-		$array['domain'] = $_POST['domain'];
-		$array['path'] = '/';
-		$array['title'] = $_POST['title'];
-		$array['user_id'] = get_current_user_id();
-		$main = get_site_url();
-		$cloned_url = $array['domain'] . '.' . $main;
-
-		// self::set_new_blog_build( $cloned_url );
-
-		echo '<pre>';
-		print_r( $array );
-		echo '</pre>';
-
-		echo 'New site for: ';
-		echo '<br>at ' . $array['domain'];
-		echo '<br>entitled ' . $array['title'];
-
-		die();
+	public static function get_sites() {
+		$subsites = get_sites();
+		foreach ( $subsites as $subsite ) {
+			if ( isset( $subsite ) ) {
+				$subsite_id = get_object_vars( $subsite )['blog_id'];
+				$subsite_name = get_blog_details( $subsite_id )->blogname;
+				echo 'Site ID/Name: ' . esc_html( $subsite_id ) . ' / ' . esc_html( $subsite_name ) . '<br>';
+			}
+		}
 	}
 
-	public static function set_new_blog_build( $cloned_url ) {
+	public static function set_new_blog_build() {
 	    global $wpdb;
+
+		$print = array();
+		// $array['name'] = $_POST['name'];
+		$print['domain'] = $_POST['domain'];
+		$print['function'] = __FUNCTION__ . ' should build us a new blog';
+
+		// $print['path'] = '/';
+		$print['title'] = $_POST['title'];
+		$current_user = wp_get_current_user();
+		$print['user_email'] = $current_user->user_email;
+		$print['user_id'] = get_current_user_id();
+		// $print['site_id'] = 6;
+
+		echo '<pre>';
+		print_r( $print );
+		echo '</pre>';
+
+		echo '<br>at ' . $print['domain'];
+		echo '<br>entitled ' . $print['title'];
+		echo '<br> ' . $print['user_email'];
+		echo '<h4> ' . $print['function'] . '</h4>';
+	
+
 	    $main_blog_id = self::get_main_blog_id();
 		// return '$main_blog_id = ' . $main_blog_id . ' from line ' . __LINE__;
 
+		echo '<br><h4>Let\'s build a site from </h4>';
+
 		if ( isset( $_POST['wpmuclone_default_blog'] ) ) {
 		    $id_default_blog = intval( $_POST['wpmuclone_default_blog'] );
-			// return '$id_default_blog = ' . $id_default_blog;
+			echo '<br>Site ' . $id_default_blog;
 		} else {
 		    $id_default_blog = get_option( 'wpmuclone_default_blog' );
-			// return '$id_default_blog = ' . $id_default_blog;
+			echo '<br>Site ' . $id_default_blog;
 		}
+
 		$copy_users = get_option( 'wpmuclone_copy_users' );
 
 		if ( ! $id_default_blog) { return false; }
 
 		$old_url = get_site_url($id_default_blog);
-		// return '$old_url = ' . $old_url . ' from line ' . __LINE__;
+		echo ', which is ' . $old_url;
 
 	    switch_to_blog( $blog_id );
 
-		$new_url = get_site_url(); // pbrocks $_POST['domain'];
-		$new_url = $cloned_url;
-		// return '$new_url = ' . $new_url . ' from line ' . __LINE__;
+		$main_url = get_site_url(); // pbrocks $_POST['domain'];
 
-	    $new_name = get_bloginfo('title','raw'); // pbrocks 
-		// return '$new_name = ' . $new_name . ' from line ' . __LINE__;
+		echo '<br>The Network URL = ' . $main_url; // = $cloned_url;
 
-		$admin_email = get_bloginfo('admin_email','raw'); // pbrocks 
+		$domain = $print['domain'];
+		$network = get_blog_details(1);
+
+		echo '<br>The name of your subdomain = http://' . $domain . '.' . $network->domain . '/';
+
+	    $new_name = $print['title']; // pbrocks 
+		echo '<br>The title of your site = ' . $new_name;
+
 		$admin_user = wp_get_current_user();
+		// echo '<br>$admin_user = ' . $admin_user . ' from line ' . __LINE__;
 		$admin_email = $admin_user->user_email;
-		// return '$admin_email = ' . $admin_email . ' from line ' . __LINE__;
+		echo '<br>$admin_email = ' . $admin_email;
 
-	    $prefix = $wpdb->base_prefix;
+		$prefix = $wpdb->base_prefix;
 		// return '$prefix = ' . $prefix . ' from line ' . __LINE__;
 
 	    $prefix_escaped = str_replace('_','\_',$prefix);
@@ -353,6 +411,11 @@ HTML;
 	    // List all tables for the default blog,
 	    $tables_q = $wpdb->get_results("SHOW TABLES LIKE '" . $prefix_escaped . $id_default_blog . "\_%'");
 
+		// echo '<pre>';
+		// print_r( $tables_q );
+		// echo '</pre>';
+
+		die();
 	    foreach($tables_q as $table){
 	        $in_array = get_object_vars($table);
 	        $old_table_name = current($in_array);
